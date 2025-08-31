@@ -13,12 +13,17 @@ from PIL import Image
 TEMPLATE_DIR = "memes"
 QUERY_DIR = "new_memes"
 
-if torch.backends.mps.is_available():
-    DEVICE = "mps"
-elif torch.cuda.is_available():
-    DEVICE = "cuda"
-else:
-    DEVICE = "cpu"
+
+def decide_device():
+    if torch.backends.mps.is_available():
+        return "mps"
+    elif torch.cuda.is_available():
+        return "cuda"
+    else:
+        return "cpu"
+
+
+DEVICE = decide_device()
 
 print("Running on:", DEVICE)
 
@@ -27,20 +32,22 @@ print(f"Loading CLIP on {DEVICE}...")
 model, preprocess = clip.load("ViT-B/32", device=DEVICE)
 
 # -------- HELPERS --------
-def get_image_embeddings(folder):
+def get_image_embeddings(folder, extensions=(".jpg", ".png", ".jpeg"), device=DEVICE):
     image_paths, embeddings, labels = [], [], []
     for fname in os.listdir(folder):
         path = os.path.join(folder, fname)
-        if not fname.lower().endswith((".jpg", ".png", ".jpeg")):
+        if not fname.lower().endswith(extensions):
             continue
-        img = preprocess(Image.open(path)).unsqueeze(0).to(DEVICE)
+        img = preprocess(Image.open(path)).unsqueeze(0).to(device)
         with torch.no_grad():
             emb = model.encode_image(img)
         emb = emb / emb.norm(dim=-1, keepdim=True)  # normalize
         embeddings.append(emb.cpu().numpy())
         image_paths.append(path)
         # label = filename without number (e.g. "distracted_boyfriend")
-        labels.append("".join([c for c in os.path.splitext(fname)[0] if not c.isdigit()]))
+        image_labels = "".join([c for c in os.path.splitext(fname)[0] if not c.isdigit()])
+        labels.append(image_labels)
+        print(fname, image_labels)
     return image_paths, labels, torch.vstack([torch.tensor(e) for e in embeddings]).numpy()
 
 # -------- PREPARE TEMPLATE INDEX --------
