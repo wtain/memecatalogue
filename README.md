@@ -18,11 +18,19 @@ source ./myenv/bin/activate
 pip install -r requirements.txt
 ```
 
+
+### MacOS
+
+```commandline
+export DYLD_LIBRARY_PATH=/opt/homebrew/opt/libomp/lib:$DYLD_LIBRARY_PATH
+```
+
 ### Alternative
 
 ```bash
 pip install torch torchvision pillow faiss-cpu ftfy regex tqdm git+https://github.com/openai/CLIP.git
 
+pip3 install torch torchvision torchaudio
 ```
 
 ### Remarks

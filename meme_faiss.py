@@ -7,12 +7,20 @@ from PIL import Image
 
 # https://github.com/dmlc/xgboost/issues/1715
 # https://stackoverflow.com/questions/53014306/error-15-initializing-libiomp5-dylib-but-found-libiomp5-dylib-already-initial
-os.environ['KMP_DUPLICATE_LIB_OK']='True'
+# os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
 # -------- CONFIG --------
 TEMPLATE_DIR = "memes"
 QUERY_DIR = "new_memes"
-DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+
+if torch.backends.mps.is_available():
+    DEVICE = "mps"
+elif torch.cuda.is_available():
+    DEVICE = "cuda"
+else:
+    DEVICE = "cpu"
+
+print("Running on:", DEVICE)
 
 # -------- LOAD CLIP MODEL --------
 print(f"Loading CLIP on {DEVICE}...")
